@@ -1,0 +1,3 @@
+import {z} from "zod";import {prisma} from "@/lib/prisma";import {apiError,requireManager,requireUser} from "@/lib/access";
+export async function GET(){try{const u=await requireUser();return Response.json(await prisma.shiftPeriod.findMany({where:{storeId:u.storeId},orderBy:[{year:"desc"},{month:"desc"}]}))}catch(e){return apiError(e)}}
+export async function POST(req:Request){try{const u=await requireManager();const b=z.object({year:z.number().int().min(2020).max(2100),month:z.number().int().min(1).max(12),submissionDeadline:z.coerce.date()}).parse(await req.json());return Response.json(await prisma.shiftPeriod.create({data:{storeId:u.storeId,...b}}),{status:201})}catch(e){return apiError(e)}}

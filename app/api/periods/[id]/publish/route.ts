@@ -1,0 +1,2 @@
+import {prisma} from "@/lib/prisma";import {apiError,periodInStore,requireManager} from "@/lib/access";
+export async function POST(_:Request,{params}:{params:Promise<{id:string}>}){try{const u=await requireManager();const {id}=await params;await periodInStore(id,u.storeId);await prisma.shiftPeriod.update({where:{id},data:{status:"published",publishedAt:new Date()}});return Response.json({ok:true})}catch(e){return apiError(e)}}

@@ -1,0 +1,2 @@
+import {z} from "zod";import {prisma} from "@/lib/prisma";import {apiError,periodInStore,requireManager} from "@/lib/access";
+export async function PATCH(req:Request,{params}:{params:Promise<{id:string}>}){try{const u=await requireManager();const {id}=await params;await periodInStore(id,u.storeId);const b=z.object({submissionDeadline:z.coerce.date().optional()}).parse(await req.json());return Response.json(await prisma.shiftPeriod.update({where:{id},data:b}))}catch(e){return apiError(e)}}

@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  staff
+  manager
+}
+enum PeriodStatus {
+  collecting
+  reviewing
+  published
+}
+
+model Store {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  settings  StoreSettings?
+  users     User[]
+  periods   ShiftPeriod[]
+  @@map("stores")
+}
+
+model StoreSettings {
+  storeId              String @id @db.Uuid @map("store_id")
+  store                 Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  businessStartTime     DateTime @db.Time(0) @map("business_start_time")
+  businessEndTime       DateTime @db.Time(0) @map("business_end_time")
+  shiftIntervalMinutes  Int @default(30) @map("shift_interval_minutes")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  @@map("store_settings")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  storeId      String   @db.Uuid @map("store_id")
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(staff)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  requests     ShiftRequest[]
+  submissions  ShiftSubmission[]
+  confirmed    ConfirmedShift[]
+  @@index([storeId, isActive])
+  @@map("users")
+}
+
+model ShiftPeriod {
+  id                 String       @id @default(uuid()) @db.Uuid
+  storeId            String       @db.Uuid @map("store_id")
+  store              Store        @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  year               Int
+  month              Int
+  status             PeriodStatus @default(collecting)
+  submissionDeadline DateTime     @map("submission_deadline")
+  publishedAt        DateTime?    @map("published_at")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+  requests           ShiftRequest[]
+  submissions        ShiftSubmission[]
+  confirmed          ConfirmedShift[]
+  @@unique([storeId, year, month])
+  @@index([storeId, status])
+  @@map("shift_periods")
+}
+
+model ShiftRequest {
+  id            String @id @default(uuid()) @db.Uuid
+  userId        String @db.Uuid @map("user_id")
+  user          User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  shiftPeriodId String @db.Uuid @map("shift_period_id")
+  shiftPeriod   ShiftPeriod @relation(fields: [shiftPeriodId], references: [id], onDelete: Cascade)
+  date          DateTime @db.Date
+  startTime     DateTime? @db.Time(0) @map("start_time")
+  endTime       DateTime? @db.Time(0) @map("end_time")
+  isDayOff      Boolean @default(false) @map("is_day_off")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  @@unique([userId, shiftPeriodId, date])
+  @@index([shiftPeriodId, userId])
+  @@map("shift_requests")
+}
+
+model ShiftSubmission {
+  id            String @id @default(uuid()) @db.Uuid
+  userId        String @db.Uuid @map("user_id")
+  user          User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  shiftPeriodId String @db.Uuid @map("shift_period_id")
+  shiftPeriod   ShiftPeriod @relation(fields: [shiftPeriodId], references: [id], onDelete: Cascade)
+  submittedAt   DateTime @default(now()) @map("submitted_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  @@unique([userId, shiftPeriodId])
+  @@index([shiftPeriodId])
+  @@map("shift_submissions")
+}
+
+model ConfirmedShift {
+  id            String @id @default(uuid()) @db.Uuid
+  userId        String @db.Uuid @map("user_id")
+  user          User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  shiftPeriodId String @db.Uuid @map("shift_period_id")
+  shiftPeriod   ShiftPeriod @relation(fields: [shiftPeriodId], references: [id], onDelete: Cascade)
+  date          DateTime @db.Date
+  startTime     DateTime? @db.Time(0) @map("start_time")
+  endTime       DateTime? @db.Time(0) @map("end_time")
+  isDayOff      Boolean @default(false) @map("is_day_off")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  @@unique([userId, shiftPeriodId, date])
+  @@index([shiftPeriodId, userId])
+  @@map("confirmed_shifts")
+}
