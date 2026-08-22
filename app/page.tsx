@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, LayoutDashboard, LogOut, Menu, Pencil, Plus, Send, Settings, Sparkles, Users, X } from "lucide-react";
+import { CalendarDays, Check, CheckCircle2, Clock3, LayoutDashboard, LogOut, Menu, Pencil, Plus, Send, Settings, Sparkles, Users, X } from "lucide-react";
 import ProductionApp from "./production-app";
 
 type Role = "staff" | "manager";
@@ -11,6 +11,7 @@ const names = ["山田 太郎", "田中 花子", "佐藤 一郎", "鈴木 健", 
 const times = Array.from({length:27},(_,i)=>`${String(7+Math.floor(i/2)).padStart(2,"0")}:${i%2?"30":"00"}`);
 const days = Array.from({length:30},(_,i)=>i+1);
 const dow = ["火","水","木","金","土","日","月"];
+const demoStoreName = "デモ店舗";
 
 const seedShift = (day:number):Shift => day%7===6||day%7===0 ? {status:"off",start:"07:00",end:"15:00"} : day%3===0 ? {status:"work",start:"12:00",end:"20:00"} : {status:"work",start:"07:00",end:"15:00"};
 
@@ -25,8 +26,8 @@ export default function App(){
   const manager=role==="manager";
   const nav = manager ? [{v:"home",l:"概要",i:LayoutDashboard},{v:"submissions",l:"提出状況",i:CheckCircle2},{v:"schedule",l:"シフト表",i:CalendarDays},{v:"members",l:"従業員",i:Users}] : [{v:"home",l:"ホーム",i:LayoutDashboard},{v:"request",l:"希望シフト",i:CalendarDays},{v:"confirmed",l:"確定シフト",i:CheckCircle2}];
   return <div className="shell">
-    <aside className={mobileNav?"sidebar open":"sidebar"}><div className="brand"><span className="brandmark">S</span><span>Shiftly</span><button className="icon mobile-only" onClick={()=>setMobileNav(false)}><X/></button></div><div className="shop"><span className="shop-icon">若</span><span><b>若葉サービスステーション</b><small>店舗管理</small></span><ChevronDown/></div><nav>{nav.map(n=><button key={n.v} className={view===n.v?"active":""} onClick={()=>{setView(n.v as View);setMobileNav(false)}}><n.i/>{n.l}</button>)}</nav><div className="side-bottom"><button><Settings/>設定</button><button onClick={()=>setLogged(false)}><LogOut/>ログアウト</button><div className="profile"><div className="avatar">{manager?"店":"山"}</div><span><b>{manager?"店長 太郎":"山田 太郎"}</b><small>{manager?"管理者":"スタッフ"}</small></span></div></div></aside>
-    <main><header><button className="icon mobile-only" onClick={()=>setMobileNav(true)}><Menu/></button><div className="header-title"><span>若葉サービスステーション</span><small>2026年9月のシフト</small></div><div className="role-switch"><button className={!manager?"selected":""} onClick={()=>{setRole("staff");setView("home")}}>スタッフ</button><button className={manager?"selected":""} onClick={()=>{setRole("manager");setView("home")}}>管理者</button></div><div className="header-avatar">{manager?"店":"山"}</div></header>
+    <aside className={mobileNav?"sidebar open":"sidebar"}><div className="brand"><span className="brandmark">S</span><span>Shiftly</span><button className="icon mobile-only" onClick={()=>setMobileNav(false)}><X/></button></div><div className="shop"><span className="shop-icon">{Array.from(demoStoreName)[0]}</span><span><b>{demoStoreName}</b><small>店舗管理</small></span></div><nav>{nav.map(n=><button key={n.v} className={view===n.v?"active":""} onClick={()=>{setView(n.v as View);setMobileNav(false)}}><n.i/>{n.l}</button>)}</nav><div className="side-bottom"><button><Settings/>設定</button><button onClick={()=>setLogged(false)}><LogOut/>ログアウト</button><div className="profile"><div className="avatar">{manager?"店":"山"}</div><span><b>{manager?"店長 太郎":"山田 太郎"}</b><small>{manager?"管理者":"スタッフ"}</small></span></div></div></aside>
+    <main><header><button className="icon mobile-only" onClick={()=>setMobileNav(true)}><Menu/></button><div className="header-title"><span>{demoStoreName}</span><small>2026年9月のシフト</small></div><div className="role-switch"><button className={!manager?"selected":""} onClick={()=>{setRole("staff");setView("home")}}>スタッフ</button><button className={manager?"selected":""} onClick={()=>{setRole("manager");setView("home")}}>管理者</button></div><div className="header-avatar">{manager?"店":"山"}</div></header>
       <div className="content">{manager ? <Manager view={view} setView={setView} reviewing={reviewing} setReviewing={setReviewing} published={published} setPublished={setPublished} notify={notify}/> : <Staff view={view} setView={setView} shifts={shifts} setShifts={setShifts} submitted={submitted} setSubmitted={setSubmitted} published={published} notify={notify}/>}</div>
     </main>{toast&&<div className="toast"><CheckCircle2/>{toast}</div>}
   </div>
